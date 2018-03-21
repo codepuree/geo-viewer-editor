@@ -19,6 +19,8 @@
 
 <body>
     <progress></progress>
+    <label for="inBackgroundImage">Background image</label>
+    <input id="inBackgroundImage" type="file">
     <label for="inFile">File to process</label>
     <input id="inFile" type="file">
     <button id="btnProcess">Process file</button>
@@ -38,6 +40,7 @@
                     stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" />
             </g>
         </symbol>
+        <g id="layerBackgroundImage"></g>
     </svg>
 
     <div id="layerWrapper">

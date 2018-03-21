@@ -1,9 +1,11 @@
 const /** {HTMLInputElement} */inFile = document.querySelector('#inFile');
+const inBackgroundImage = document.querySelector('#inBackgroundImage');
 const btnProcess = document.querySelector('#inProcess');
 const btnExportXYZ = document.querySelector('#btnExportXYZ');
 const layers = {};
 const svgCanvas = document.querySelector('#svgCanvas');
 const layerWrapper = document.querySelector('#layerWrapper');
+const layerBackgroundImage = document.querySelector('#layerBackgroundImage');
 let filename = '';
 const pointCodeList = /** {PointCode[]}*/[
     /** {PointCode} */{ code: '141', name: 'Laubbaum', group: { code: '140', name: 'Solitärbepflanzung' }, symbol: '#symbol_broadleaf-tree', color: 'darkgreen' },
@@ -94,13 +96,13 @@ inFile.addEventListener('change', event => {
                         console.log(`Point 8:\n\tx: ${east2x(4463462.49, bounds)}\n\ty: ${north2y(5331589.56, bounds)}`);
 
                         // Render background
-                        // let imgPath = './baseMap.PNG';
-                        // let imageLayer = document.createElement('g');
-                        // let image = document.createElement('image');
-                        // image.setAttribute('xlink:href', imgPath);
-                        // imageLayer.appendChild(image);
-                        // imageLayer.setAttribute('transform', `scale(0.76, 0.77) translate(-197.9199999999255, -269.17700000014156)`);
-                        // svgCanvas.appendChild(imageLayer);
+                        let imgPath = './baseMap.PNG';
+                        let imageLayer = document.createElement('g');
+                        let image = document.createElement('image');
+                        image.setAttribute('xlink:href', imgPath);
+                        imageLayer.appendChild(image);
+                        imageLayer.setAttribute('transform', `scale(0.76, 0.77) translate(-197.9199999999255, -269.17700000014156)`);
+                        svgCanvas.appendChild(imageLayer);
 
                         // Render points
                         for (point of points) {
@@ -155,6 +157,27 @@ inFile.addEventListener('change', event => {
 btnExportXYZ.addEventListener('click', event => {
     let file = writeXYZ(points);
     download(file, filename + '.xyz', 'text/csv');
+});
+
+inBackgroundImage.addEventListener('change', event => {
+    if (inBackgroundImage.files.length >= 0) {
+        layerBackgroundImage.innerHTML = ''; 
+
+        let imageFile = inBackgroundImage.files[0];
+
+        let reader = new FileReader();
+        reader.addEventListener('loadend', event => {
+            let result = reader.result;
+
+            let image = document.createElement('image');
+            image.setAttribute('xlink:href', result);
+            image.setAttribute('transform', 'scale(0.77, 0.76) translate(-50, -155) rotate(-0.2)');
+    
+            layerBackgroundImage.appendChild(image);
+        });
+        reader.readAsDataURL(imageFile)
+
+    }
 });
 
 function readFileJXL(file) {
