@@ -1,13 +1,17 @@
 const /** {HTMLInputElement} */inFile = document.querySelector('#inFile');
 const btnProcess = document.querySelector('#inProcess');
+const btnExportXYZ = document.querySelector('#btnExportXYZ');
 const layers = {};
 const svgCanvas = document.querySelector('#svgCanvas');
 const layerWrapper = document.querySelector('#layerWrapper');
-
+let filename = '';
 const pointCodeList = /** {PointCode[]}*/[
     /** {PointCode} */{ code: '141', name: 'Laubbaum', group: { code: '140', name: 'Solitärbepflanzung' }, symbol: '#symbol_broadleaf-tree', color: 'darkgreen' },
     /** {PointCode} */{ code: '112', name: 'Mülleimer', group: { code: '110', name: 'Infrastrukturobjekte' }, symbol: '#symbol_trash', color: 'darkgray' },
 ];
+
+// let points = [];
+let points = [];
 
 // Type definitions
 /** 
@@ -29,13 +33,14 @@ inFile.addEventListener('change', event => {
         let fileExtension = file.name.split('.').pop();
         switch (fileExtension) {
             case 'jxl':
+                filename = file.name.split('.')[0];
                 readFileJXL(file)
                     .then(text => {
                         return parseXML(text)
                     })
                     .then(/** {HTMLElement} */xml => {
                         const pointRecords = xml.querySelectorAll('PointRecord');
-                        const points = [].slice.call(pointRecords).map(pointRecord => {
+                        points = [].slice.call(pointRecords).map(pointRecord => {
                             return xml2Object(pointRecord);
                         });
 
@@ -141,6 +146,15 @@ inFile.addEventListener('change', event => {
                 break;
         }
     }
+
+    if (points.length >= 0) {
+        btnExportXYZ.removeAttribute('disabled');
+    }
+});
+
+btnExportXYZ.addEventListener('click', event => {
+    let file = writeXYZ(points);
+    download(file, filename + '.xyz', 'text/csv');
 });
 
 function readFileJXL(file) {
@@ -157,6 +171,62 @@ function readFileJXL(file) {
 
         fileReader.readAsText(file);
     });
+}
+
+/**
+ * The function writeXYZ, writes the given array of points into a .xyz file.
+ * 
+ * @param {string} filename - Name of the file
+ * @param {Point[]} points - An array, that contains the points
+ * 
+ * @return {File} - A File containing converted points
+ */
+function writeXYZ(points) {
+    let data = '';
+
+    for (const point of points) {
+        if (point) {
+            if (point.Grid) {
+                data += `${point.Grid.East},${point.Grid.North},${point.Grid.Elevation}\n`;
+            } else if (point.ComputedGrid) {
+                data += `${point.ComputedGrid.East},${point.ComputedGrid.North},${point.ComputedGrid.Elevation}\n`;
+            }
+        }
+    }
+
+    return data;
+}
+
+/**
+ * The function download triggers a download of the given data with a given 
+ * filename and mime type.
+ * This is the initial implementation: @see {@link https://stackoverflow.com/a/30832210}
+ * 
+ * @param {string|Object} data - Data that should be download able
+ * @param {string} filename - Name of the file
+ * @param {string} type - MIME type of the file
+ */
+function download(data, filename, type) {
+    if (typeof(data) !== 'string') {
+        data = JSON.stringify(data, null, 2);
+    }
+
+    var file = new Blob([data], {type: type});
+
+    if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    else { // Others
+        var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+    }
 }
 
 function parseXML(text) {
@@ -287,7 +357,7 @@ function renderPoint(point, bounds) {
 
         if (layer) {
             layer.appendChild(circle);
-            
+
             if (symbol) {
                 layer.appendChild(symbol);
             }
@@ -322,7 +392,7 @@ function getRandomColor() {
 }
 
 function changeLayerVisibility(layerName) {
-    return function(event) {
+    return function (event) {
         let svgLayerName = `layer_${layerName.length > 0 ? layerName : '__default__'}`;
         console.log(`layerName: ${layerName} changed to `, this.checked);
         let layer = svgCanvas.querySelector(`#${svgLayerName}`);
