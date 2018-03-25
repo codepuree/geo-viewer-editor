@@ -6,6 +6,8 @@ const layers = {};
 const svgCanvas = document.querySelector('#svgCanvas');
 const layerWrapper = document.querySelector('#layerWrapper');
 const layerBackgroundImage = document.querySelector('#layerBackgroundImage');
+const svgPosX = document.querySelector('#svgPosX');
+const svgPosY = document.querySelector('#svgPosY');
 let filename = '';
 const pointCodeList = /** {PointCode[]}*/[
     /** {PointCode} */{ code: '141', name: 'Laubbaum', group: { code: '140', name: 'Solitärbepflanzung' }, symbol: '#symbol_broadleaf-tree', color: 'darkgreen' },
@@ -179,6 +181,25 @@ inBackgroundImage.addEventListener('change', event => {
 
     }
 });
+
+svgCanvas.addEventListener('pointermove', event => {
+    const bcr = svgCanvas.getBoundingClientRect();
+    const vb  = svgCanvas.viewBox.baseVal;
+
+    let relativeX = event.clientX - bcr.x;
+    let relativeY = event.clientY - bcr.y;
+
+    let posX = relativeX / bcr.width  * (vb.width  === 0 && bcr.width  > 0 ? bcr.width  : vb.width);
+    let posY = relativeY / bcr.height * (vb.height === 0 && bcr.height > 0 ? bcr.height : vb.height);
+
+    svgPosX.innerText = `${posX.toFixed(2)} (${relativeX})`;
+    svgPosY.innerText = `${posY.toFixed(2)} (${relativeY})`;
+});
+
+svgCanvas.addEventListener('pointerleave', event => {
+    svgPosX.innerText = '---';
+    svgPosY.innerText = '---';
+})
 
 function readFileJXL(file) {
     return new Promise((resolve, reject) => {
