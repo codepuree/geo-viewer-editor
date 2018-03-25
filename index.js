@@ -184,7 +184,7 @@ inBackgroundImage.addEventListener('change', event => {
 
 svgCanvas.addEventListener('pointermove', event => {
     const bcr = svgCanvas.getBoundingClientRect();
-    const vb  = svgCanvas.viewBox.baseVal;
+    const vb  = svgCanvas.viewBox.baseVal !== null ? svgCanvas.viewBox.baseVal : { x: 0, y: 0, width: 0, height: 0};
 
     let relativeX = event.clientX - bcr.x;
     let relativeY = event.clientY - bcr.y;
