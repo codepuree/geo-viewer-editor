@@ -3,7 +3,7 @@ const inBackgroundImage = document.querySelector('#inBackgroundImage');
 const btnProcess = document.querySelector('#inProcess');
 const btnExportXYZ = document.querySelector('#btnExportXYZ');
 const layers = {};
-const svgCanvas = document.querySelector('#svgCanvas');
+const /** {SVGElement} */ svgCanvas = document.querySelector('#svgCanvas');
 const layerWrapper = document.querySelector('#layerWrapper');
 const layerBackgroundImage = document.querySelector('#layerBackgroundImage');
 const svgPosX = document.querySelector('#svgPosX');
@@ -31,123 +31,101 @@ let points = [];
  * @property {string} [color] - String representation of an html color
  */
 
+/**
+ * Point type definition
+ * 
+ * @typedef {object} Point - Point
+ * @property {string} name - Name of the point
+ * @property {string} code - Code of the point
+ * @property {number} x - X coordinate
+ * @property {number} y - Y coordinate
+ * @property {number} z - Z coordinate
+ */
+
+/**
+ * Bounds type definition
+ * 
+ * @typedef {object} Bounds - Bounds
+ * @property {number} minX - Minimum x
+ * @property {number} maxX - Maximum x
+ * @property {number} minY - Minimum y
+ * @property {number} maxY - Maximum y
+ * @property {number} width - Width (maxX - minX)
+ * @property {number} height - Width (maxY - minY)
+ */
+
 // Events
 inFile.addEventListener('change', event => {
     for (const file of inFile.files) {
         let fileExtension = file.name.split('.').pop();
+        let fileHandler = null;
+
         switch (fileExtension) {
-            case 'jxl':
+            case 'jxl': {
                 filename = file.name.split('.')[0];
-                readFileJXL(file)
-                    .then(text => {
-                        return parseXML(text)
-                    })
-                    .then(/** {HTMLElement} */xml => {
-                        const pointRecords = xml.querySelectorAll('PointRecord');
-                        points = [].slice.call(pointRecords).map(pointRecord => {
-                            return xml2Object(pointRecord);
-                        });
+                fileHandler = readFileJXL(file);
+            } break;
 
-                        const minNorth = points.reduce((accumulator, point) => {
-                            if (point && point.Grid && point.Grid.North) {
-                                return Math.min(accumulator, parseFloat(point.Grid.North));
-                            } else {
-                                return Math.min(accumulator, Number.MAX_SAFE_INTEGER);
-                            }
-                        }, Number.MAX_SAFE_INTEGER);
-                        const maxNorth = points.reduce((accumulator, point) => {
-                            if (point && point.Grid && point.Grid.North) {
-                                return Math.max(accumulator, parseFloat(point.Grid.North));
-                            } else {
-                                return Math.max(accumulator, Number.MIN_SAFE_INTEGER);
-                            }
-                        }, Number.MIN_SAFE_INTEGER);
-                        const minEast = points.reduce((accumulator, point) => {
-                            if (point && point.Grid && point.Grid.East) {
-                                return Math.min(accumulator, parseFloat(point.Grid.East));
-                            } else {
-                                return Math.min(accumulator, Number.MAX_SAFE_INTEGER);
-                            }
-                        }, Number.MAX_SAFE_INTEGER);
-                        const maxEast = points.reduce((accumulator, point) => {
-                            if (point && point.Grid && point.Grid.East) {
-                                return Math.max(accumulator, parseFloat(point.Grid.East));
-                            } else {
-                                return Math.max(accumulator, Number.MIN_SAFE_INTEGER);
-                            }
-                        }, Number.MIN_SAFE_INTEGER);
-
-                        const height = Math.abs(maxNorth - minNorth);
-                        const width = Math.abs(maxEast - minEast);
-
-                        // svgCanvas.setAttribute('viewBox', `${minEast} ${maxNorth} ${maxEast} ${minNorth}`);
-                        svgCanvas.setAttribute('viewBox', `0 0 ${width} ${height}`);
-
-                        const bounds = {
-                            minNorth: minNorth,
-                            maxNorth: maxNorth,
-                            minEast: minEast,
-                            maxEast: maxEast
-                        }
-
-                        // Position
-                        console.log('Point 1:', points.filter(point => {
-                            return point.Name === '1' || point.Name === '8';
-                        }));
-                        console.log(`Point 1:\n\tx: ${east2x(4463572.33, bounds)}\n\ty: ${north2y(5331738.93, bounds)}`);
-                        console.log(`Point 8:\n\tx: ${east2x(4463462.49, bounds)}\n\ty: ${north2y(5331589.56, bounds)}`);
-
-                        // Render background
-                        let imgPath = './baseMap.PNG';
-                        let imageLayer = document.createElement('g');
-                        let image = document.createElement('image');
-                        image.setAttribute('xlink:href', imgPath);
-                        imageLayer.appendChild(image);
-                        imageLayer.setAttribute('transform', `scale(0.76, 0.77) translate(-197.9199999999255, -269.17700000014156)`);
-                        svgCanvas.appendChild(imageLayer);
-
-                        // Render points
-                        for (point of points) {
-                            renderPoint(point, bounds);
-                        }
-                        svgCanvas.innerHTML += '';
-                        console.log(points[0]);
-                        log(`There are ${pointRecords.length} (${points.length}) points in the file.
-                        \tmin North: ${minNorth}\tmax North: ${maxNorth}
-                        \tmin East:  ${minEast}\tmax East:  ${maxEast}
-                        \twidth: ${width} height: ${height}`);
-
-                        for (let layerName in layers) {
-                            let checkbox = document.createElement('input');
-                            let color = document.createElement('input');
-                            let label = document.createElement('label');
-
-                            checkbox.type = 'checkbox';
-                            label.innerText = `${layerName} (${layers[layerName].number})`;
-                            let id = `l_${layerName}`;
-                            checkbox.id = id;
-                            checkbox.checked = true;
-                            label.for = id;
-
-                            color.disabled = true;
-                            color.type = 'color';
-                            color.value = layers[layerName].color;
-
-                            checkbox.addEventListener('change', changeLayerVisibility(layerName));
-
-                            layerWrapper.appendChild(checkbox);
-                            layerWrapper.appendChild(label);
-                            layerWrapper.appendChild(color);
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error.message, error.stack);
-                    })
-                break;
-
-            default:
+            default: {
                 warn(`The file extension '.${fileExtension}' of the file '${file.name}' is not know to the programm.`);
-                break;
+            } break;
+        }
+
+        if (fileHandler && fileHandler.then) {
+            fileHandler
+                .then(ps => {
+                    points = ps;
+
+                    const bounds = calculateBounds(points);
+
+                    svgCanvas.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+
+                    // Render background
+                    let imgPath = './baseMap.PNG';
+                    let imageLayer = document.createElement('g');
+                    let image = document.createElement('image');
+                    image.setAttribute('xlink:href', imgPath);
+                    imageLayer.appendChild(image);
+                    imageLayer.setAttribute('transform', `scale(0.76, 0.77) translate(-197.9199999999255, -269.17700000014156)`);
+                    svgCanvas.appendChild(imageLayer);
+
+                    // Render points
+                    for (point of points) {
+                        renderPoint(point, bounds);
+                    }
+                    svgCanvas.innerHTML += '';
+                    console.log(points[0]);
+                    log(`There are ${points.length} points in the file.
+                \tmin North: ${bounds.minY}\tmax North: ${bounds.maxY}
+                \tmin East:  ${bounds.minX}\tmax East:  ${bounds.maxX}
+                \twidth: ${bounds.width} height: ${bounds.height}`);
+
+                    for (let layerName in layers) {
+                        let checkbox = document.createElement('input');
+                        let color = document.createElement('input');
+                        let label = document.createElement('label');
+
+                        checkbox.type = 'checkbox';
+                        label.innerText = `${layerName} (${layers[layerName].number})`;
+                        let id = `l_${layerName}`;
+                        checkbox.id = id;
+                        checkbox.checked = true;
+                        label.for = id;
+
+                        color.disabled = true;
+                        color.type = 'color';
+                        color.value = layers[layerName].color;
+
+                        checkbox.addEventListener('change', changeLayerVisibility(layerName));
+
+                        layerWrapper.appendChild(checkbox);
+                        layerWrapper.appendChild(label);
+                        layerWrapper.appendChild(color);
+                    }
+                })
+                .catch(error => {
+                    console.error(error.message, error.stack);
+                })
         }
     }
 
@@ -163,7 +141,7 @@ btnExportXYZ.addEventListener('click', event => {
 
 inBackgroundImage.addEventListener('change', event => {
     if (inBackgroundImage.files.length >= 0) {
-        layerBackgroundImage.innerHTML = ''; 
+        layerBackgroundImage.innerHTML = '';
 
         let imageFile = inBackgroundImage.files[0];
 
@@ -174,7 +152,7 @@ inBackgroundImage.addEventListener('change', event => {
             let image = document.createElement('image');
             image.setAttribute('xlink:href', result);
             image.setAttribute('transform', 'scale(0.77, 0.76) translate(-50, -155) rotate(-0.2)');
-    
+
             layerBackgroundImage.appendChild(image);
         });
         reader.readAsDataURL(imageFile)
@@ -184,12 +162,12 @@ inBackgroundImage.addEventListener('change', event => {
 
 svgCanvas.addEventListener('pointermove', event => {
     const bcr = svgCanvas.getBoundingClientRect();
-    const vb  = svgCanvas.viewBox.baseVal !== null ? svgCanvas.viewBox.baseVal : { x: 0, y: 0, width: 0, height: 0};
+    const vb = svgCanvas.viewBox.baseVal !== null ? svgCanvas.viewBox.baseVal : { x: 0, y: 0, width: 0, height: 0 };
 
     let relativeX = event.clientX - bcr.x;
     let relativeY = event.clientY - bcr.y;
 
-    let posX = relativeX / bcr.width  * (vb.width  === 0 && bcr.width  > 0 ? bcr.width  : vb.width);
+    let posX = relativeX / bcr.width * (vb.width === 0 && bcr.width > 0 ? bcr.width : vb.width);
     let posY = relativeY / bcr.height * (vb.height === 0 && bcr.height > 0 ? bcr.height : vb.height);
 
     svgPosX.innerText = `${posX.toFixed(2)} (${relativeX})`;
@@ -201,7 +179,15 @@ svgCanvas.addEventListener('pointerleave', event => {
     svgPosY.innerText = '---';
 })
 
-function readFileJXL(file) {
+/**
+ * The function readFileAsText wraps the FileReader readAsText into an promise.
+ * 
+ * @param {File} file - File to read as text
+ * 
+ * @returns {Promise.<string, Error>} A promise that returns a string if 
+ *      resolved, or an Error if rejected.
+ */
+function readFileAsText(file) {
     return new Promise((resolve, reject) => {
         let fileReader = new FileReader();
 
@@ -215,6 +201,64 @@ function readFileJXL(file) {
 
         fileReader.readAsText(file);
     });
+}
+
+/**
+ * The function convertJxlToPoint converts the given .jxl point record into a 
+ * point.
+ * 
+ * @param {HTMLElement} rawPoint - Raw point data
+ * 
+ * @returns {Point} - Point
+ */
+function convertJxlToPoint(rawPoint) {
+    let point = {};
+
+    point.name = rawPoint.Name ? rawPoint.Name : '';
+    point.code = rawPoint.Code ? rawPoint.Code : '';
+
+    if (rawPoint.Grid) {
+        point.x = parseFloat(rawPoint.Grid.East);
+        point.y = parseFloat(rawPoint.Grid.North);
+        point.z = parseFloat(rawPoint.Grid.Elevation);
+    } else if (rawPoint.ComputedGrid) {
+        point.x = parseFloat(rawPoint.ComputedGrid.East);
+        point.y = parseFloat(rawPoint.ComputedGrid.North);
+        point.z = parseFloat(rawPoint.ComputedGrid.Elevation);
+    }
+
+    return point;
+}
+
+/**
+ * The function readFileJXL, returns a promise of the read file, that returns an
+ * array of points.
+ * 
+ * @param {File} file - File to read
+ * 
+ * @returns {Promise.<Point[], Error>} - Promise that contains the points array
+ */
+function readFileJXL(file) {
+    return readFileAsText(file)
+        .then(text => {
+            return parseXML(text)
+        })
+        .then(/** {HTMLElement} */xml => {
+            return new Promise((resolve, reject) => {
+                /**
+                 * @type {HTMLCollection} pointRecords - List of point records
+                 */
+                const pointRecords = xml.querySelectorAll('PointRecord');
+
+                /**
+                 * @type {Point[]} points - Array of points
+                 */
+                let points = [].slice.call(pointRecords).map(pointRecord => {
+                    return convertJxlToPoint(xml2Object(pointRecord));
+                });
+                resolve(points)
+            })
+        })
 }
 
 /**
@@ -242,6 +286,38 @@ function writeXYZ(points) {
 }
 
 /**
+ * The function calculateBounds, calculates bounds from the given points.
+ * 
+ * @param {Point[]} points - List of points
+ * 
+ * @returns {Bounds} - Calculated bounds from the given points
+ */
+function calculateBounds(points) {
+    let bounds = {};
+
+    bounds.minX = points.reduce((accumulator, point) => {
+        return Math.min(accumulator, point.x);
+    }, Number.MAX_SAFE_INTEGER);
+
+    bounds.maxX = points.reduce((accumulator, point) => {
+        return Math.max(accumulator, point.x);
+    }, Number.MIN_SAFE_INTEGER);
+
+    bounds.minY = points.reduce((accumulator, point) => {
+        return Math.min(accumulator, point.y);
+    }, Number.MAX_SAFE_INTEGER);
+
+    bounds.maxY = points.reduce((accumulator, point) => {
+        return Math.max(accumulator, point.y);
+    }, Number.MIN_SAFE_INTEGER);
+
+    bounds.width = Math.abs(bounds.maxX - bounds.minX);
+    bounds.height = Math.abs(bounds.maxY - bounds.minY);
+
+    return bounds;
+}
+
+/**
  * The function download triggers a download of the given data with a given 
  * filename and mime type.
  * This is the initial implementation: @see {@link https://stackoverflow.com/a/30832210}
@@ -251,25 +327,25 @@ function writeXYZ(points) {
  * @param {string} type - MIME type of the file
  */
 function download(data, filename, type) {
-    if (typeof(data) !== 'string') {
+    if (typeof (data) !== 'string') {
         data = JSON.stringify(data, null, 2);
     }
 
-    var file = new Blob([data], {type: type});
+    var file = new Blob([data], { type: type });
 
     if (window.navigator.msSaveOrOpenBlob) // IE10+
         window.navigator.msSaveOrOpenBlob(file, filename);
     else { // Others
         var a = document.createElement("a"),
-                url = URL.createObjectURL(file);
+            url = URL.createObjectURL(file);
         a.href = url;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
-        setTimeout(function() {
+        setTimeout(function () {
             document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);  
-        }, 0); 
+            window.URL.revokeObjectURL(url);
+        }, 0);
     }
 }
 
@@ -324,87 +400,81 @@ function xml2Object(xml) {
 }
 
 function north2y(north, bounds) {
-    let height = (bounds.maxNorth - bounds.minNorth);
-
-    return height - (north - bounds.minNorth);
+    return bounds.height - (north - bounds.minY);
 }
 
 function east2x(east, bounds) {
-    return east - bounds.minEast;
+    // console.log(`${east - bounds.minX} = ${east} - ${bounds.minX}`);
+    return east - bounds.minX;
 }
 
+/**
+ * The function renderPoint renders a given point in the svgCanvas.
+ * 
+ * @param {Point} point - Point to render
+ * @param {Bounds} bounds - Bounds of all coordinates
+ */
 function renderPoint(point, bounds) {
-    if (!layers[point.Code]) {
-        layers[point.Code] = {
+    if (!layers[point.code]) {
+        layers[point.code] = {
             color: getRandomColor(),
             number: 0
         };
 
         let layer = document.createElement('g');
-        layer.id = `layer_${point.Code.length > 0 ? point.Code : '__default__'}`;
+        layer.id = `layer_${point.code.length > 0 ? point.code : '__default__'}`;
         svgCanvas.appendChild(layer);
     }
 
-    layers[point.Code].number++;
+    layers[point.code].number++;
 
-    // <circle cx="60" cy="60" r="50"/>
+    let symbol = null;
     let circle = document.createElement('circle');
-    if (point) {
-        let x = null;
-        let y = null;
+    let x = east2x(point.x, bounds);
+    let y = north2y(point.y, bounds);
 
-        if (point.Grid && point.Grid.North && point.Grid.East) {
-            x = east2x(parseFloat(point.Grid.East), bounds);
-            y = north2y(parseFloat(point.Grid.North), bounds);
-        } else if (point.ComputedGrid && point.ComputedGrid.North && point.ComputedGrid.East) {
-            x = east2x(parseFloat(point.ComputedGrid.East), bounds);
-            y = north2y(parseFloat(point.ComputedGrid.North), bounds);
-        }
+    if (x && y) {
+        let /** {PointCode} */pointCodeDefinitions = pointCodeList.filter((/** {PointCode} */pointCode) => {
+            return pointCode.code === point.code;
+        });
 
-        let symbol = null;
+        circle.setAttribute('cx', x);
+        circle.setAttribute('cy', y);
+        circle.setAttribute('r', 1);
+        circle.setAttribute('fill', layers[point.code].color);
 
-        if (x && y) {
-            let /** {PointCode} */pointCodeDefinitions = pointCodeList.filter((/** {PointCode} */pointCode) => {
-                return pointCode.code === point.Code;
-            });
-
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            circle.setAttribute('r', 1);
-            circle.setAttribute('fill', layers[point.Code].color);
-
-            if (pointCodeDefinitions.length === 1) {
-                let pointCodeDefinition = pointCodeDefinitions[0];
-                // <use href="#symbol_broadleaf-tree" transform="translate(-5, -20)" x="0" y="0" />
-                if (pointCodeDefinition.symbol) {
-                    symbol = document.createElement('use');
-                    symbol.setAttribute('href', pointCodeDefinition.symbol);
-                    symbol.setAttribute('x', x);
-                    symbol.setAttribute('y', y);
-                    symbol.setAttribute('transform', 'translate(-5, -20)');
-
-                    if (pointCodeDefinition.color) {
-                        symbol.setAttribute('stroke', pointCodeDefinition.color);
-                    } else {
-                        symbol.setAttribute('stroke', layers[point.Code].color);
-                    }
-                }
+        if (pointCodeDefinitions.length === 1) {
+            let pointCodeDefinition = pointCodeDefinitions[0];
+            // <use href="#symbol_broadleaf-tree" transform="translate(-5, -20)" x="0" y="0" />
+            if (pointCodeDefinition.symbol) {
+                symbol = document.createElement('use');
+                symbol.setAttribute('href', pointCodeDefinition.symbol);
+                symbol.setAttribute('x', x);
+                symbol.setAttribute('y', y);
+                symbol.setAttribute('transform', 'translate(-5, -20)');
 
                 if (pointCodeDefinition.color) {
-                    circle.setAttribute('fill', pointCodeDefinition.color);
+                    symbol.setAttribute('stroke', pointCodeDefinition.color);
+                } else {
+                    symbol.setAttribute('stroke', layers[point.code].color);
                 }
             }
-        }
 
-        let layerName = `layer_${point.Code.length > 0 ? point.Code : '__default__'}`;
-        let layer = svgCanvas.querySelector(`#${layerName}`);
-
-        if (layer) {
-            layer.appendChild(circle);
-
-            if (symbol) {
-                layer.appendChild(symbol);
+            if (pointCodeDefinition.color) {
+                circle.setAttribute('fill', pointCodeDefinition.color);
             }
+            svgCanvas.appendChild(symbol);
+        }
+    }
+
+    let layerName = `layer_${point.code.length > 0 ? point.code : '__default__'}`;
+    let layer = svgCanvas.querySelector(`#${layerName}`);
+
+    if (layer) {
+        layer.appendChild(circle);
+
+        if (symbol) {
+            layer.appendChild(symbol);
         }
     }
 }
