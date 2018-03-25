@@ -66,6 +66,11 @@ inFile.addEventListener('change', event => {
                 fileHandler = readFileJXL(file);
             } break;
 
+            case 'txt': {
+                filename = file.name.split('.')[0];
+                fileHandler = readFileTXT(file);
+            } break;
+
             default: {
                 warn(`The file extension '.${fileExtension}' of the file '${file.name}' is not know to the programm.`);
             } break;
@@ -231,8 +236,8 @@ function convertJxlToPoint(rawPoint) {
 }
 
 /**
- * The function readFileJXL, returns a promise of the read file, that returns an
- * array of points.
+ * The function readFileJXL, returns a promise of the read jxl file, that 
+ * returns an array of points.
  * 
  * @param {File} file - File to read
  * 
@@ -259,6 +264,58 @@ function readFileJXL(file) {
                 resolve(points)
             })
         })
+}
+
+/**
+ * The function readFileTXT, returns a promise of the read .txt file, that 
+ * returns an array of points.
+ * 
+ * @param {*} file 
+ */
+function readFileTXT(file) {
+    return readFileAsText(file)
+        .then(text => {
+            return new Promise((resolve, reject) => {
+                let lines = text.replace('\r\n', '\n').split('\n');
+                let points = [];
+
+                for (let line of lines) {
+                    if (line && line.length > 0) {
+                        let point = { name: '', code: '' };
+                        line.trim().split(' ').forEach((value, index) => {
+                            switch (index) {
+                                case 0: {
+                                    point.name = value;
+                                } break;
+    
+                                case 1: {
+                                    point.x = parseFloat(value);
+                                } break;
+    
+                                case 2: {
+                                    point.y = parseFloat(value);
+                                } break;
+    
+                                case 3: {
+                                    point.z = parseFloat(value)
+                                } break;
+    
+                                case 4: {
+                                    point.code = value;
+                                } break;
+    
+                                default:
+                                    break;
+                            }
+                        });
+    
+                        points.push(point);
+                    }
+                }
+
+                resolve(points);
+            });
+        });
 }
 
 /**
@@ -296,19 +353,19 @@ function calculateBounds(points) {
     let bounds = {};
 
     bounds.minX = points.reduce((accumulator, point) => {
-        return Math.min(accumulator, point.x);
+        return Math.min(accumulator, point.x ? point.x : Number.MAX_SAFE_INTEGER);
     }, Number.MAX_SAFE_INTEGER);
 
     bounds.maxX = points.reduce((accumulator, point) => {
-        return Math.max(accumulator, point.x);
+        return Math.max(accumulator, point.x ? point.x : Number.MIN_SAFE_INTEGER);
     }, Number.MIN_SAFE_INTEGER);
 
     bounds.minY = points.reduce((accumulator, point) => {
-        return Math.min(accumulator, point.y);
+        return Math.min(accumulator, point.y ? point.y : Number.MAX_SAFE_INTEGER);
     }, Number.MAX_SAFE_INTEGER);
 
     bounds.maxY = points.reduce((accumulator, point) => {
-        return Math.max(accumulator, point.y);
+        return Math.max(accumulator, point.y ? point.y : Number.MIN_SAFE_INTEGER);
     }, Number.MIN_SAFE_INTEGER);
 
     bounds.width = Math.abs(bounds.maxX - bounds.minX);
