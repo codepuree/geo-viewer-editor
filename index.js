@@ -232,6 +232,10 @@ function convertJxlToPoint(rawPoint) {
         point.z = parseFloat(rawPoint.ComputedGrid.Elevation);
     }
 
+    if (Number.isNaN(point.z)) {
+        point.z = 0;
+    }
+
     return point;
 }
 
