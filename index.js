@@ -287,28 +287,28 @@ function readFileTXT(file) {
                                 case 0: {
                                     point.name = value;
                                 } break;
-    
+
                                 case 1: {
                                     point.x = parseFloat(value);
                                 } break;
-    
+
                                 case 2: {
                                     point.y = parseFloat(value);
                                 } break;
-    
+
                                 case 3: {
                                     point.z = parseFloat(value)
                                 } break;
-    
+
                                 case 4: {
                                     point.code = value;
                                 } break;
-    
+
                                 default:
                                     break;
                             }
                         });
-    
+
                         points.push(point);
                     }
                 }
@@ -331,11 +331,7 @@ function writeXYZ(points) {
 
     for (const point of points) {
         if (point) {
-            if (point.Grid) {
-                data += `${point.Grid.East},${point.Grid.North},${point.Grid.Elevation}\n`;
-            } else if (point.ComputedGrid) {
-                data += `${point.ComputedGrid.East},${point.ComputedGrid.North},${point.ComputedGrid.Elevation}\n`;
-            }
+            data += `${point.x} ${point.y} ${point.z}\n`;
         }
     }
 
