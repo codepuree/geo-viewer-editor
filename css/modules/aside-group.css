@@ -1,0 +1,12 @@
+.aside-group {
+    overflow: auto;
+}
+
+.aside-group > summary {
+    background-color: var(--color-primary);
+    padding: 0 0 0 5px;
+}
+
+.aside-group > main {
+    padding: 0 0 0 15px;
+}

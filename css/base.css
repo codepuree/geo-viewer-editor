@@ -1,0 +1,63 @@
+:root {
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+}
+
+* {
+    box-sizing: border-box;
+    font-size: 1rem;
+    padding: 0;
+    margin: 0;
+}
+
+html, body {
+    padding: 0px;
+    margin: 0px;
+    font-size: 1rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    padding: 0px 0px 10px 0px;
+    margin: 0px;
+}
+
+h1 {
+    font-size: 2.75rem;
+}
+
+h2 {
+    font-size: 2.5rem;
+}
+
+h3 {
+    font-size: 2.25rem;
+}
+
+h4 {
+    font-size: 2rem;
+}
+
+h5 {
+    font-size: 1.75rem;
+}
+
+h6 {
+    font-size: 1.5rem;
+}
+
+button {
+    text-transform: uppercase;
+    background: none;
+    color: lightgray;
+    border: none;
+    padding: 10px;
+    text-align: center;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}

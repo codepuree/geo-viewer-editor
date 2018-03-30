@@ -1,0 +1,22 @@
+:root {
+    /* Font settings: */
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size: 16px;
+
+    /* Colors: */
+
+    /* Primary color */
+    --color-primary: #424242;
+    --color-primary-light: #6d6d6d;
+    --color-primary-dark: #1b1b1b;
+
+    /* Secondary color */
+    --color-secondary: #01579b;
+    --color-secondary-light: #4f83cc;
+    --color-secondary-dark: #002f6c;
+
+    /* Text color */
+    --color-text: gray;
+    --color-text-light: lightgray;
+    --color-text-dark: black;
+}

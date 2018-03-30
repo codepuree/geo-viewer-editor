@@ -1,0 +1,25 @@
+dialog {
+    max-width: 80vw;
+    max-height: 50vh;
+    margin: auto auto;
+    border: none;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.6), 6px 6px 6px rgba(0, 0, 0, 0.6);
+    overflow: auto;
+}
+
+dialog > header {
+    background-color: var(--color-secondary);
+    color: lightgray;
+    text-align: center;
+    font-size: 1.75rem;
+}
+
+dialog > main {
+    padding: 5px;
+    overflow: auto;
+}
+
+dialog > footer {
+    background-color: var(--color-secondary);
+    text-align: center;
+}

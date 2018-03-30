@@ -5,68 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>.DXF - Converter</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        svg {
-            border: 1px solid black;
-            margin: 0;
-            padding: 0;
-            transform-origin: 50% 50%;
-        }
-    </style>
+    <link rel="stylesheet" href="index.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/4.0.1/math.min.js"></script>
     <script src="./calculations.js" type="module"></script>
 </head>
 
 <body>
-    <progress></progress>
-    <label for="inBackgroundImage">Background image</label>
-    <input id="inBackgroundImage" type="file">
-    <label for="inFile">File to process</label>
-    <input id="inFile" type="file">
-    <button id="btnProcess">Process file</button>
-    <button id="btnExportXYZ" disabled="disabled">Export .xyz</button>
-    <svg id="svgCanvas">
-        <g id="main">
-            <g id="layerBackgroundImage"></g>
+    <header class="app-header">
+        <header class="app-title">.DXF - Converter</header>
+        <nav class="app-nav">
+            <ul class="dropdown-menu">
+                <li>
+                    <span>File</span>
+                    <ul>
+                        <li>
+                            <label for="inFile">File to process</label>
+                            <input id="inFile" type="file">
+                        </li>
+                        <li>
+                            <label for="inBackgroundImage">Background image</label>
+                            <input id="inBackgroundImage" type="file">
+                        </li>
+                        <hr>
+                        <li>
+                            <button id="btnExportXYZ" disabled="disabled">Export .xyz</button>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
 
-            <symbol id="symbol_broadleaf-tree">
-                <g transform="scale(1, -1) translate(0, -20)">
-                    <line x1="5" y1="19" x2="5" y2="14" vector-effect="non-scaling-stroke" stroke-width="1" stroke-linejoin="miter" stroke-linecap="square"
-                        stroke-miterlimit="3" />
-                    <path d=" M 5 13 Q 1.365 10.326 1 8 Q 0.526 4.977 5 1 Q 9.474 4.977 9 8 Q 8.635 10.326 5 13" fill="none" vector-effect="non-scaling-stroke"
-                        stroke-width="1" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" />
+    <main class="app-main">
+        <aside class="app-aside left">
+            <details class="aside-group">
+                <summary>Points</summary>
+                <main id="layerWrapper"></main>
+            </details>
+        </aside>
+        <main class="app-main-main">
+            <svg id="svgCanvas">
+                <g id="main">
+                    <g id="layerBackgroundImage"></g>
+
+                    <symbol id="symbol_broadleaf-tree">
+                        <g transform="scale(1, -1) translate(0, -20)">
+                            <line x1="5" y1="19" x2="5" y2="14" vector-effect="non-scaling-stroke" stroke-width="1" stroke-linejoin="miter" stroke-linecap="square"
+                                stroke-miterlimit="3" />
+                            <path d=" M 5 13 Q 1.365 10.326 1 8 Q 0.526 4.977 5 1 Q 9.474 4.977 9 8 Q 8.635 10.326 5 13" fill="none" vector-effect="non-scaling-stroke"
+                                stroke-width="1" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" />
+                        </g>
+                    </symbol>
+
+                    <symbol id="symbol_trash">
+                        <g transform="scale(1, -1) translate(0, -20)">
+                            <g clip-path="url(#_clipPath_Vqh5emcDn9QbbdET7jG4yckLZ17iprwo)">
+                                <path d=" M 3 20 L 2 16 L 8 16 L 7 20 L 3 20 Z " fill="rgb(255,255,255)" vector-effect="non-scaling-stroke" stroke-width="1"
+                                    stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3"
+                                />
+                            </g>
+                        </g>
+                    </symbol>
                 </g>
-            </symbol>
+            </svg>
+        </main>
+        <aside class="app-aside right"></aside>
+    </main>
 
-            <symbol id="symbol_trash">
-                <g transform="scale(1, -1) translate(0, -20)">
-                    <g clip-path="url(#_clipPath_Vqh5emcDn9QbbdET7jG4yckLZ17iprwo)">
-                        <path d=" M 3 20 L 2 16 L 8 16 L 7 20 L 3 20 Z " fill="rgb(255,255,255)" vector-effect="non-scaling-stroke" stroke-width="1"
-                            stroke="rgb(0,0,0)" stroke-linejoin="miter" stroke-linecap="square" stroke-miterlimit="3" />
-                    </g>
-                </g>
-            </symbol>
-        </g>
-    </svg>
-
-    <div>
-        <table>
-            <tr>
-                <th>X:</th>
-                <td id="svgPosX">---</td>
-                <th>Y:</th>
-                <td id="svgPosY">---</td>
-            </tr>
-        </table>
-    </div>
-
-    <div id="layerWrapper">
-    </div>
+    <footer class="app-footer">
+        <div class="app-footer left">
+            <table>
+                <tr>
+                    <th>X:</th>
+                    <td id="svgPosX">---</td>
+                    <th>Y:</th>
+                    <td id="svgPosY">---</td>
+                </tr>
+            </table>
+        </div>
+        <div class="app-footer center"></div>
+        <div class="app-footer right">
+            <span>Status</span>
+            -
+            <progress></progress>
+        </div>
+    </footer>
 
     <script src="index.js" type="module"></script>
 </body>

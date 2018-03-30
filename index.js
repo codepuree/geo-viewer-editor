@@ -1,6 +1,5 @@
 const /** {HTMLInputElement} */inFile = document.querySelector('#inFile');
 const inBackgroundImage = document.querySelector('#inBackgroundImage');
-const btnProcess = document.querySelector('#inProcess');
 const btnExportXYZ = document.querySelector('#btnExportXYZ');
 const layers = {};
 const /** {SVGElement} */ svgCanvas = document.querySelector('#svgCanvas');
