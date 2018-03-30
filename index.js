@@ -14,8 +14,11 @@ const pointCodeList = /** {PointCode[]}*/[
     /** {PointCode} */{ code: '112', name: 'Mülleimer', group: { code: '110', name: 'Infrastrukturobjekte' }, symbol: '#symbol_trash', color: 'darkgray' },
 ];
 
-// let points = [];
+import { calculate_transform, transform, east2x, north2y } from './calculations.js';
+import { renderPoint, getLayerNames } from './canvas.js';
+
 let points = [];
+let bounds = {};
 
 // Type definitions
 /** 
@@ -46,6 +49,8 @@ let points = [];
  * Bounds type definition
  * 
  * @typedef {object} Bounds - Bounds
+ * @property {number} centerX - Center X
+ * @property {number} centerY - Center Y
  * @property {number} minX - Minimum x
  * @property {number} maxX - Maximum x
  * @property {number} minY - Minimum y
@@ -83,50 +88,28 @@ inFile.addEventListener('change', event => {
 
                     const bounds = calculateBounds(points);
 
-                    svgCanvas.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
-
-                    // Render background
-                    let imgPath = './baseMap.PNG';
-                    let imageLayer = document.createElement('g');
-                    let image = document.createElement('image');
-                    image.setAttribute('xlink:href', imgPath);
-                    imageLayer.appendChild(image);
-                    imageLayer.setAttribute('transform', `scale(0.76, 0.77) translate(-197.9199999999255, -269.17700000014156)`);
-                    svgCanvas.appendChild(imageLayer);
+                    // svgCanvas.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+                    svgCanvas.setAttribute('viewBox', `${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`);
+                    const svgMain = svgCanvas.querySelector('#main');
+                    svgMain.setAttribute('transform', `scale(1, -1) translate(0, ${2 * -bounds.centerY})`)
 
                     // Render points
-                    for (point of points) {
-                        renderPoint(point, bounds);
+                    for (let point of points) {
+                        // renderPoint(point, bounds);
+                        renderPoint(svgMain, point, 2, pointCodeList);
                     }
                     svgCanvas.innerHTML += '';
-                    console.log(points[0]);
-                    log(`There are ${points.length} points in the file.
-                \tmin North: ${bounds.minY}\tmax North: ${bounds.maxY}
-                \tmin East:  ${bounds.minX}\tmax East:  ${bounds.maxX}
-                \twidth: ${bounds.width} height: ${bounds.height}`);
+                    log(`There are ${points.length} points in the file.\n`
+                        + `\tmin North: ${bounds.minY}\tmax North: ${bounds.maxY}\n`
+                        + `\tmin East:  ${bounds.minX}\tmax East:  ${bounds.maxX}\n`
+                        + `\twidth: ${bounds.width} height: ${bounds.height}`);
 
-                    for (let layerName in layers) {
-                        let checkbox = document.createElement('input');
-                        let color = document.createElement('input');
-                        let label = document.createElement('label');
+                    getLayerNames(svgMain).forEach(name => {
+                        createLayerControl(layerWrapper, name, svgMain);
+                    })
 
-                        checkbox.type = 'checkbox';
-                        label.innerText = `${layerName} (${layers[layerName].number})`;
-                        let id = `l_${layerName}`;
-                        checkbox.id = id;
-                        checkbox.checked = true;
-                        label.for = id;
-
-                        color.disabled = true;
-                        color.type = 'color';
-                        color.value = layers[layerName].color;
-
-                        checkbox.addEventListener('change', changeLayerVisibility(layerName));
-
-                        layerWrapper.appendChild(checkbox);
-                        layerWrapper.appendChild(label);
-                        layerWrapper.appendChild(color);
-                    }
+                    // TODO: Remove
+                    window.points = ps;
                 })
                 .catch(error => {
                     console.error(error.message, error.stack);
@@ -154,11 +137,37 @@ inBackgroundImage.addEventListener('change', event => {
         reader.addEventListener('loadend', event => {
             let result = reader.result;
 
-            let image = document.createElement('image');
-            image.setAttribute('xlink:href', result);
-            image.setAttribute('transform', 'scale(0.77, 0.76) translate(-50, -155) rotate(-0.2)');
+            let img = new Image();
 
-            layerBackgroundImage.appendChild(image);
+            img.onload = event => {
+                let image = document.createElement('image');
+                image.setAttribute('xlink:href', result);
+                // image.setAttribute('transform', 'scale(0.77, 0.76) translate(-50, -155) rotate(-0.2)');
+                
+                let trans = calculate_transform(
+                    [{ id: '8', x: 4463462.49, y: 5331589.56 }, { id: '296', x: 4463681.6, y: 5331612.58 }, { id: '468', x: 4463411.25, y: 5331457.3 }],
+                    [{ id: '8', x: 120, y: 538 }, { id: '296', x: 402, y: 505}, { id: '468', x: 53, y: 706 }]
+                );
+                console.log('trans:', trans);
+                // image.setAttribute('transform', /*`scale(1, 1) translate(0, 0) */`rotate(${trans.rotation})`);
+
+                if (!svgCanvas.hasAttribute('viewBox')) {
+                    svgCanvas.setAttribute('viewBox', `0 0 ${img.width} ${img.height}`)
+                } else {
+                    console.log(`image: w = ${img.width} h = ${img.height}`);
+                    let viewBox = svgCanvas.viewBox.baseVal;
+                    // image.setAttribute('translate', `translate(${viewBox.x},${viewBox.y})`)
+                    image.setAttribute('x', trans.translation.x)
+                    image.setAttribute('y', trans.translation.y)
+                    image.setAttribute('width', Math.abs(viewBox.width * trans.scale.x))
+                    image.setAttribute('height', Math.abs(viewBox.height * trans.scale.y))
+                }
+
+                document.querySelector('#layerBackgroundImage').appendChild(image);
+                svgCanvas.innerHTML = svgCanvas.innerHTML;
+            }
+
+            img.src = result;
         });
         reader.readAsDataURL(imageFile)
 
@@ -352,6 +361,7 @@ function writeXYZ(points) {
 function calculateBounds(points) {
     let bounds = {};
 
+    // Calculate min & max
     bounds.minX = points.reduce((accumulator, point) => {
         return Math.min(accumulator, point.x ? point.x : Number.MAX_SAFE_INTEGER);
     }, Number.MAX_SAFE_INTEGER);
@@ -368,8 +378,13 @@ function calculateBounds(points) {
         return Math.max(accumulator, point.y ? point.y : Number.MIN_SAFE_INTEGER);
     }, Number.MIN_SAFE_INTEGER);
 
+    // Calculate width & height
     bounds.width = Math.abs(bounds.maxX - bounds.minX);
     bounds.height = Math.abs(bounds.maxY - bounds.minY);
+
+    // Calculate center
+    bounds.centerX = bounds.minX + bounds.width / 2;
+    bounds.centerY = bounds.minY + bounds.height / 2;
 
     return bounds;
 }
@@ -456,86 +471,6 @@ function xml2Object(xml) {
     }
 }
 
-function north2y(north, bounds) {
-    return bounds.height - (north - bounds.minY);
-}
-
-function east2x(east, bounds) {
-    // console.log(`${east - bounds.minX} = ${east} - ${bounds.minX}`);
-    return east - bounds.minX;
-}
-
-/**
- * The function renderPoint renders a given point in the svgCanvas.
- * 
- * @param {Point} point - Point to render
- * @param {Bounds} bounds - Bounds of all coordinates
- */
-function renderPoint(point, bounds) {
-    if (!layers[point.code]) {
-        layers[point.code] = {
-            color: getRandomColor(),
-            number: 0
-        };
-
-        let layer = document.createElement('g');
-        layer.id = `layer_${point.code.length > 0 ? point.code : '__default__'}`;
-        svgCanvas.appendChild(layer);
-    }
-
-    layers[point.code].number++;
-
-    let symbol = null;
-    let circle = document.createElement('circle');
-    let x = east2x(point.x, bounds);
-    let y = north2y(point.y, bounds);
-
-    if (x && y) {
-        let /** {PointCode} */pointCodeDefinitions = pointCodeList.filter((/** {PointCode} */pointCode) => {
-            return pointCode.code === point.code;
-        });
-
-        circle.setAttribute('cx', x);
-        circle.setAttribute('cy', y);
-        circle.setAttribute('r', 1);
-        circle.setAttribute('fill', layers[point.code].color);
-
-        if (pointCodeDefinitions.length === 1) {
-            let pointCodeDefinition = pointCodeDefinitions[0];
-            // <use href="#symbol_broadleaf-tree" transform="translate(-5, -20)" x="0" y="0" />
-            if (pointCodeDefinition.symbol) {
-                symbol = document.createElement('use');
-                symbol.setAttribute('href', pointCodeDefinition.symbol);
-                symbol.setAttribute('x', x);
-                symbol.setAttribute('y', y);
-                symbol.setAttribute('transform', 'translate(-5, -20)');
-
-                if (pointCodeDefinition.color) {
-                    symbol.setAttribute('stroke', pointCodeDefinition.color);
-                } else {
-                    symbol.setAttribute('stroke', layers[point.code].color);
-                }
-            }
-
-            if (pointCodeDefinition.color) {
-                circle.setAttribute('fill', pointCodeDefinition.color);
-            }
-            svgCanvas.appendChild(symbol);
-        }
-    }
-
-    let layerName = `layer_${point.code.length > 0 ? point.code : '__default__'}`;
-    let layer = svgCanvas.querySelector(`#${layerName}`);
-
-    if (layer) {
-        layer.appendChild(circle);
-
-        if (symbol) {
-            layer.appendChild(symbol);
-        }
-    }
-}
-
 // Logging functions
 function log(msg) {
     console.log(msg);
@@ -562,6 +497,36 @@ function getRandomColor() {
     return color;
 }
 
+function createLayerControl(wrapper, name, canvas) {
+    let layer = canvas.querySelector(`#layer_${name}`);
+
+    if (layer) {
+        let number = Array.from(layer.querySelectorAll('circle')).length;
+        let fillColor = getHexColor(layer.getAttribute('fill'));
+
+        let checkbox = document.createElement('input');
+        let color = document.createElement('input');
+        let label = document.createElement('label');
+
+        checkbox.type = 'checkbox';
+        label.innerText = `${name} (${number})`;
+        let id = `l_${name}`;
+        checkbox.id = id;
+        checkbox.checked = true;
+        label.for = id;
+
+        color.disabled = true;
+        color.type = 'color';
+        color.value = fillColor;
+
+        checkbox.addEventListener('change', changeLayerVisibility(name));
+
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+        wrapper.appendChild(color);
+    }
+}
+
 function changeLayerVisibility(layerName) {
     return function (event) {
         let svgLayerName = `layer_${layerName.length > 0 ? layerName : '__default__'}`;
@@ -574,5 +539,33 @@ function changeLayerVisibility(layerName) {
                 layer.setAttribute('visibility', 'hidden');
             }
         }
+    }
+}
+
+function getHexColor(color) {
+    console.log('Color:', color);
+    if (color.includes('rgb')) {
+        color = color.replace('rgb(', '').replace(')', '')
+        return color.split(',')
+            .reduce((acc, cur) => {
+                return acc + parseInt(cur.trim()).toString(16)
+            }, '#')
+    } else if (color.startsWith('#')) {
+        return color;
+    }
+}
+
+function getRGBColor(color) {
+    if (color.includes('rgb')) {
+        return color;
+    } else if (color.startsWith('#')) {
+        return 'rgb(' +
+            color
+                .match(/[a-f0-9]{2}/g)
+                .map(x => {
+                    return parseInt(x, 16)
+                })
+                .join(', ')
+            + ')'
     }
 }
