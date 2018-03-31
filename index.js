@@ -1,6 +1,7 @@
 const /** {HTMLInputElement} */inFile = document.querySelector('#inFile');
 const inBackgroundImage = document.querySelector('#inBackgroundImage');
 const btnExportXYZ = document.querySelector('#btnExportXYZ');
+const inPointCodeList = document.querySelector('#inPointCodeList');
 const layers = {};
 const /** {SVGElement} */ svgCanvas = document.querySelector('#svgCanvas');
 const layerWrapper = document.querySelector('#layerWrapper');
@@ -8,10 +9,8 @@ const layerBackgroundImage = document.querySelector('#layerBackgroundImage');
 const svgPosX = document.querySelector('#svgPosX');
 const svgPosY = document.querySelector('#svgPosY');
 let filename = '';
-const pointCodeList = /** {PointCode[]}*/[
-    /** {PointCode} */{ code: '141', name: 'Laubbaum', group: { code: '140', name: 'Solitärbepflanzung' }, symbol: '#symbol_broadleaf-tree', color: 'darkgreen' },
-    /** {PointCode} */{ code: '112', name: 'Mülleimer', group: { code: '110', name: 'Infrastrukturobjekte' }, symbol: '#symbol_trash', color: 'darkgray' },
-];
+/** @type {PointCode[]} */
+let pointCodeList = [];
 
 import { calculate_transform, transform, east2x, north2y } from './calculations.js';
 import { renderPoint, getLayerNames } from './canvas.js';
@@ -104,7 +103,26 @@ inFile.addEventListener('change', event => {
                         + `\twidth: ${bounds.width} height: ${bounds.height}`);
 
                     getLayerNames(svgMain).forEach(name => {
-                        createLayerControl(layerWrapper, name, svgMain);
+                        let container = layerWrapper;
+                        let text = null;
+
+                        if (pointCodeList.length > 0) {
+                            let pointCode = pointCodeList.find(x => x.code === name);
+
+                            if (pointCode && pointCode.group && pointCode.group.name) {
+                                container = getAsideGroup(layerWrapper, pointCode.group.name);
+                            } else {
+                                container = getAsideGroup(layerWrapper, 'Unknown')
+                            }
+
+                            if (pointCode && pointCode.name) {
+                                text = pointCode.name;
+                            }
+                        }
+
+                        container.style.display = 'grid';
+                        container.style.gridTemplateColumns = 'auto auto auto';
+                        createLayerControl({ wrapper: container, name, text, canvas: svgMain });
                     })
 
                     // TODO: Remove
@@ -118,6 +136,29 @@ inFile.addEventListener('change', event => {
 
     if (points.length >= 0) {
         btnExportXYZ.removeAttribute('disabled');
+    }
+});
+
+inPointCodeList.addEventListener('change', event => {
+    for (let file of inPointCodeList.files) {
+        let fileExtension = file.name.split('.').pop();
+        let fileHandler = null;
+
+        switch (fileExtension) {
+            case 'json':
+                fileHandler = readFileAsJSON(file)
+                break;
+
+            default:
+                warn(`The file extension '.${fileExtension}' of the file '${file.name}' is not know to the programm.`);
+                break;
+        }
+
+        if (fileHandler.then) {
+            fileHandler.then(newPointCodeList => {
+                pointCodeList = pointCodeList.concat(newPointCodeList)
+            })
+        }
     }
 });
 
@@ -142,10 +183,10 @@ inBackgroundImage.addEventListener('change', event => {
                 let image = document.createElement('image');
                 image.setAttribute('xlink:href', result);
                 // image.setAttribute('transform', 'scale(0.77, 0.76) translate(-50, -155) rotate(-0.2)');
-                
+
                 let trans = calculate_transform(
                     [{ id: '8', x: 4463462.49, y: 5331589.56 }, { id: '296', x: 4463681.6, y: 5331612.58 }, { id: '468', x: 4463411.25, y: 5331457.3 }],
-                    [{ id: '8', x: 120, y: 538 }, { id: '296', x: 402, y: 505}, { id: '468', x: 53, y: 706 }]
+                    [{ id: '8', x: 120, y: 538 }, { id: '296', x: 402, y: 505 }, { id: '468', x: 53, y: 706 }]
                 );
                 console.log('trans:', trans);
                 // image.setAttribute('transform', /*`scale(1, 1) translate(0, 0) */`rotate(${trans.rotation})`);
@@ -198,7 +239,7 @@ svgCanvas.addEventListener('pointerleave', event => {
  * @param {File} file - File to read as text
  * 
  * @returns {Promise.<string, Error>} A promise that returns a string if 
- *      resolved, or an Error if rejected.
+ *      resolved, or an error if rejected.
  */
 function readFileAsText(file) {
     return new Promise((resolve, reject) => {
@@ -213,6 +254,27 @@ function readFileAsText(file) {
         });
 
         fileReader.readAsText(file);
+    });
+}
+
+/**
+ * The function readFileAsJSON parses a given file into JSON.
+ * 
+ * @param {File} file - File to parse
+ * 
+ * @returns {Promise.<object, Error>} A promise that returns an object if 
+ * resolved, or error if rejected.
+ */
+function readFileAsJSON(file) {
+    return new Promise((resolve, reject) => {
+        readFileAsText(file)
+            .then(text => {
+                try {
+                    resolve(JSON.parse(text));
+                } catch (error) {
+                    reject(error);
+                }
+            })
     });
 }
 
@@ -496,7 +558,39 @@ function getRandomColor() {
     return color;
 }
 
-function createLayerControl(wrapper, name, canvas) {
+function createAsideGroup(wrapper, name) {
+    let details = document.createElement('details');
+    let summary = document.createElement('summary');
+    let main = document.createElement('main');
+
+    details.className = 'aside-group';
+
+    summary.innerHTML = name;
+    details.appendChild(summary);
+
+    details.appendChild(main)
+    wrapper.appendChild(details)    
+
+    return main
+}
+
+function getAsideGroup(wrapper, name) {
+    let details = Array.from(wrapper.querySelectorAll('details'))
+        .find(x => {
+            let summary = x.querySelector('summary');
+            
+            return summary.innerHTML.trim() === name.trim();
+        })
+    
+    if (details) {
+        let main = details.querySelector('main');
+        return main;
+    } else {
+        return createAsideGroup(wrapper, name) 
+    }
+}
+
+function createLayerControl({wrapper, name, text, canvas}) {
     let layer = canvas.querySelector(`#layer_${name}`);
 
     if (layer) {
@@ -508,7 +602,11 @@ function createLayerControl(wrapper, name, canvas) {
         let label = document.createElement('label');
 
         checkbox.type = 'checkbox';
-        label.innerText = `${name} (${number})`;
+        if (text) {
+            label.innerText = `${text} [${name}] (${number})`;
+        } else {
+            label.innerText = `${name} (${number})`;
+        }
         let id = `l_${name}`;
         checkbox.id = id;
         checkbox.checked = true;
