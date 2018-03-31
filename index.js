@@ -8,6 +8,8 @@ const layerWrapper = document.querySelector('#layerWrapper');
 const layerBackgroundImage = document.querySelector('#layerBackgroundImage');
 const svgPosX = document.querySelector('#svgPosX');
 const svgPosY = document.querySelector('#svgPosY');
+const progressMain = document.querySelector('#progressMain');
+const progressStatus = document.querySelector('#progressStatus');
 let filename = '';
 /** @type {PointCode[]} */
 let pointCodeList = [];
@@ -246,13 +248,24 @@ function readFileAsText(file) {
         let fileReader = new FileReader();
 
         fileReader.addEventListener('loadend', event => {
+            progressMain.removeAttribute('min');
+            progressMain.removeAttribute('max');
+            progressMain.removeAttribute('value');
+            progressStatus.innerHTML = `Status`;
             resolve(fileReader.result);
         });
 
+        fileReader.onprogress = event => {
+            progressMain.setAttribute('max', event.total);
+            progressMain.setAttribute('value', event.loaded);
+        }
+        
         fileReader.addEventListener('error', event => {
             reject(fileReader.error);
         });
-
+        
+        progressMain.setAttribute('min', 0);
+        progressStatus.innerHTML = `Loading '${file.name}'`;
         fileReader.readAsText(file);
     });
 }
