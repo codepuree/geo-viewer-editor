@@ -45,19 +45,41 @@ h6 {
     font-size: 1.5rem;
 }
 
-button {
+/* Default input styles */
+
+/* Buttons */
+button,
+input[type=button],
+input[type=submit],
+input[type=reset] {
     text-transform: uppercase;
     background: none;
-    color: lightgray;
+    color: var(--color-text-light);
     border: none;
     padding: 10px;
     text-align: center;
 }
 
-button:hover {
+button:hover,
+input[type=button]:hover,
+input[type=submit]:hover,
+input[type=reset]:hover {
     cursor: pointer;
 }
 
-button:disabled {
+button:disabled,
+input[type=button]:disabled,
+input[type=submit]:disabled,
+input[type=reset]:disabled {
     cursor: not-allowed;
+}
+
+/* Color, Checkbox */
+input[type=color],
+input[type=checkbox],
+input[type=radio] {
+    width: 1rem;
+    height: 1rem;
+    border: none;
+    padding: 0;
 }
