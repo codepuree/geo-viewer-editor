@@ -123,7 +123,8 @@ inFile.addEventListener('change', event => {
                         }
 
                         container.style.display = 'grid';
-                        container.style.gridTemplateColumns = 'auto auto auto';
+                        container.style.gridTemplateColumns = '1rem auto 1rem';
+                        container.style.alignItems = 'center';
                         createLayerControl({ wrapper: container, name, text, canvas: svgMain });
                     })
 
