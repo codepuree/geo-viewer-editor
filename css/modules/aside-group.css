@@ -10,3 +10,7 @@
 .aside-group > main {
     padding: 0 0 0 15px;
 }
+
+.aside-group .aside-group > summary {
+    background-color: initial;
+}
