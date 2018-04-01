@@ -5,7 +5,7 @@
  * @param {Number} r 
  * @param {PointCode[]} codeList 
  */
-export function renderPoint(canvas, { x, y, code }, r, codeList) {
+export function renderPoint(canvas, { x, y, code, name }, r, codeList) {
     let layer = canvas;
     let circle = document.createElement('circle');
 
@@ -15,13 +15,10 @@ export function renderPoint(canvas, { x, y, code }, r, codeList) {
     circle.setAttribute('cx', x);
     circle.setAttribute('cy', y);
     circle.setAttribute('r', r);
+    circle.setAttribute('id', `point_${name}`)
 
     let [ pointCode ] = codeList.filter(x => x.code == code)
     if (pointCode) {
-        // if (pointCode.color) {
-        //     circle.setAttribute('fill', pointCode.color);
-        // }
-
         if (pointCode.symbol) {
             renderSymbol(layer, { x, y, symbol: pointCode.symbol, color: pointCode.color });
         }
