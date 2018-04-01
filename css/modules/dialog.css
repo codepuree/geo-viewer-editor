@@ -4,7 +4,6 @@ dialog {
     margin: auto auto;
     border: none;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.6), 6px 6px 6px rgba(0, 0, 0, 0.6);
-    overflow: auto;
 }
 
 dialog > header {
