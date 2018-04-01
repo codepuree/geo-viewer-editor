@@ -43,6 +43,7 @@ let bounds = {};
  * @property {number} x - X coordinate
  * @property {number} y - Y coordinate
  * @property {number} z - Z coordinate
+ * @property {Date} [time] - Optional time stamp, when the point was recorded
  */
 
 /**
@@ -127,9 +128,6 @@ inFile.addEventListener('change', event => {
                         container.style.alignItems = 'center';
                         createLayerControl({ wrapper: container, name, text, canvas: svgMain });
                     })
-
-                    // TODO: Remove
-                    window.points = ps;
                 })
                 .catch(error => {
                     console.error(error.message, error.stack);
@@ -260,11 +258,11 @@ function readFileAsText(file) {
             progressMain.setAttribute('max', event.total);
             progressMain.setAttribute('value', event.loaded);
         }
-        
+
         fileReader.addEventListener('error', event => {
             reject(fileReader.error);
         });
-        
+
         progressMain.setAttribute('min', 0);
         progressStatus.innerHTML = `Loading '${file.name}'`;
         fileReader.readAsText(file);
@@ -303,9 +301,11 @@ function readFileAsJSON(file) {
 function convertJxlToPoint(rawPoint) {
     let point = {};
 
+    // Naming
     point.name = rawPoint.Name ? rawPoint.Name : '';
     point.code = rawPoint.Code ? rawPoint.Code : '';
 
+    // Location information
     if (rawPoint.Grid) {
         point.x = parseFloat(rawPoint.Grid.East);
         point.y = parseFloat(rawPoint.Grid.North);
@@ -318,6 +318,11 @@ function convertJxlToPoint(rawPoint) {
 
     if (Number.isNaN(point.z)) {
         point.z = 0;
+    }
+
+    // Additional/optional information
+    if (rawPoint.TimeStamp) {
+        point.time = new Date(rawPoint.TimeStamp);
     }
 
     return point;
@@ -523,6 +528,13 @@ function xml2Object(xml) {
         if (xml.children.length > 0) {
             let obj = {};
 
+            // Attributes
+            Array.from(xml.attributes)
+                .forEach(x => {
+                    obj[x.name] = x.value
+                })
+
+            // Children
             for (const node of xml.children) {
                 if (node.nodeName in obj) {
                     if (!Array.isArray(obj[node.nodeName])) {
@@ -583,7 +595,7 @@ function createAsideGroup(wrapper, name) {
     details.appendChild(summary);
 
     details.appendChild(main)
-    wrapper.appendChild(details)    
+    wrapper.appendChild(details)
 
     return main
 }
@@ -592,19 +604,19 @@ function getAsideGroup(wrapper, name) {
     let details = Array.from(wrapper.querySelectorAll('details'))
         .find(x => {
             let summary = x.querySelector('summary');
-            
+
             return summary.innerHTML.trim() === name.trim();
         })
-    
+
     if (details) {
         let main = details.querySelector('main');
         return main;
     } else {
-        return createAsideGroup(wrapper, name) 
+        return createAsideGroup(wrapper, name)
     }
 }
 
-function createLayerControl({wrapper, name, text, canvas}) {
+function createLayerControl({ wrapper, name, text, canvas }) {
     let layer = canvas.querySelector(`#layer_${name}`);
 
     if (layer) {
