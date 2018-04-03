@@ -64,3 +64,47 @@ export function getLayerNames(canvas) {
         .filter(x => x.id.includes('layer_'))
         .map(x => x.id.replace('layer_', ''))
 }
+
+export function capture(svgCanvas, canvas) {
+    return new Promise((resolve, reject) => {
+        let context = canvas.getContext('2d');
+        
+        let data = btoa(svgCanvas.outerHTML);
+        
+        let img = new Image();
+        let url = '';
+        
+        img.onload = () => {
+            // context.clearRect(0, 0, canvas.width, canvas.height)
+            let width = img.width;
+            let  height = img.height;
+            // if (img.width > canvas.width) {
+                height = img.height / img.width * canvas.width;
+                width = canvas.width;
+            // }
+
+            if (img.height > canvas.height) {
+                width = img.width / img.height * canvas.height;
+                height = canvas.height;
+            }
+            
+            console.log(`Image:\tw=${img.width} | h=${img.height}\nCanvas:\tw=${canvas.width} | h=${canvas.height}`);
+            context.drawImage(img, Math.round((canvas.width - width) / 2), Math.round((canvas.height - height) / 2), width, height);
+            
+            canvas.toBlob(blob => {
+                var newImg = document.createElement('img'),
+                url = URL.createObjectURL(blob);
+                
+                newImg.onload = function () {
+                    // no longer need to read the blob so it's revoked
+                    URL.revokeObjectURL(url);
+                    resolve(context);
+                };
+                
+                newImg.src = url;
+            });
+        }
+        
+        img.src = 'data:image/svg+xml;base64,' + data;
+    });
+}

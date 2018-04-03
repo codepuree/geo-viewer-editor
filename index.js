@@ -10,12 +10,15 @@ const svgPosX = document.querySelector('#svgPosX');
 const svgPosY = document.querySelector('#svgPosY');
 const progressMain = document.querySelector('#progressMain');
 const progressStatus = document.querySelector('#progressStatus');
+const dialogGifCreator = document.querySelector('#dialogGifCreator')
+const btnGifCreatorTool = document.querySelector('#btnGifCreatorTool')
 let filename = '';
 /** @type {PointCode[]} */
 let pointCodeList = [];
 
 import { calculate_transform, transform, east2x, north2y } from './calculations.js';
 import { renderPoint, getLayerNames } from './canvas.js';
+import { initGifCreator } from './gifCreatorTool.js';
 
 let points = [];
 let bounds = {};
@@ -692,3 +695,8 @@ function getRGBColor(color) {
             + ')'
     }
 }
+
+btnGifCreatorTool.addEventListener('click', event => {
+    initGifCreator({ svgCanvas, points });
+    dialogGifCreator.showModal();
+});

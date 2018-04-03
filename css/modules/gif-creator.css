@@ -1,0 +1,85 @@
+#dialogGifCreator > main {
+    display: grid;
+    grid-template-areas:
+        "canvas     label-name      input-name"
+        "canvas     label-width     input-width"
+        "canvas     label-height    input-height"
+        "canvas     label-color     input-color"
+        "canvas     label-fps       input-fps"
+        "canvas     label-length    input-length"
+        "progress   btn-record      btn-record"
+        ;
+    align-items: center;
+    grid-gap: 0 10px;
+}
+
+#canvasGifCreator {
+    grid-area: canvas;
+    border: 1px solid #ddd;
+    max-width: 40vw;
+}
+
+#imgGifCreator {
+    grid-area: canvas;
+    border: 1px solid #ddd;
+    max-width: 40vw;
+    display: none;
+}
+
+label[for=inGifCreatorName] {
+    grid-area: label-name;
+}
+
+#inGifCreatorName {
+    grid-area: input-name;
+}
+
+label[for=inGifCreatorWidth] {
+    grid-area: label-width;
+}
+
+#inGifCreatorWidth {
+    grid-area: input-width;
+}
+
+label[for=inGifCreatorHeight] {
+    grid-area: label-height;
+}
+
+#inGifCreatorHeight {
+    grid-area: input-height;
+}
+
+label[for=inGifCreatorColor] {
+    grid-area: label-color;
+}
+
+#inGifCreatorColor {
+    grid-area: input-color;
+}
+
+label[for=inGifCreatorFPS] {
+    grid-area: label-fps;
+}
+
+#inGifCreatorFPS {
+    grid-area: input-fps
+}
+
+label[for=inGifCreatorLength] {
+    grid-area: label-length;
+}
+
+#inGifCreatorLength {
+    grid-area: input-length
+}
+
+#btnGifCreatorRecord {
+    grid-area: btn-record;
+}
+
+#progressGifCreator {
+    grid-area: progress;
+    width: 100%;
+    display: none;
+}

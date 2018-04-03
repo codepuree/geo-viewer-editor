@@ -7,6 +7,10 @@
     <title>.DXF - Converter</title>
     <link rel="stylesheet" href="index.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/4.0.1/math.min.js"></script>
+    <script src="https://cdn.rawgit.com/antimatter15/jsgif/b46429c5/LZWEncoder.js"></script>
+    <script src="https://cdn.rawgit.com/antimatter15/jsgif/b46429c5/NeuQuant.js"></script>
+    <script src="https://cdn.rawgit.com/antimatter15/jsgif/b46429c5/GIFEncoder.js"></script>
+    <script src="https://cdn.rawgit.com/antimatter15/jsgif/b46429c5/b64.js"></script>
     <script src="./calculations.js" type="module"></script>
 </head>
 
@@ -39,6 +43,9 @@
                             <label for="inBackgroundImage">Background image</label>
                             <input id="inBackgroundImage" type="file">
                         </li>
+                        <li>
+                            <button id="btnGifCreatorTool">GIF Creator</button>
+                        </li>
                     </ul>
                 </li>
             </ul>
@@ -53,7 +60,7 @@
             </details>
         </aside>
         <main class="app-main-main">
-            <svg id="svgCanvas">
+            <svg id="svgCanvas" xmlns="http://www.w3.org/2000/svg">
                 <g id="main">
                     <g id="layerBackgroundImage"></g>
 
@@ -100,7 +107,121 @@
         </div>
     </footer>
 
+    <dialog id="dialogGifCreator">
+        <header>GIF Creator</header>
+        <main>
+            <style>
+                #dialogGifCreator > main {
+                    display: grid;
+                    grid-template-areas:
+                        "canvas     label-name      input-name"
+                        "canvas     label-width     input-width"
+                        "canvas     label-height    input-height"
+                        "canvas     label-color     input-color"
+                        "canvas     label-fps       input-fps"
+                        "canvas     label-length    input-length"
+                        "progress   btn-record      btn-record"
+                        ;
+                    align-items: center;
+                    grid-gap: 0 10px;
+                }
+
+                #canvasGifCreator {
+                    grid-area: canvas;
+                    border: 1px solid #ddd;
+                    max-width: 40vw;
+                }
+
+                #imgGifCreator {
+                    grid-area: canvas;
+                    border: 1px solid #ddd;
+                    max-width: 40vw;
+                    display: none;
+                }
+
+                label[for=inGifCreatorName] {
+                    grid-area: label-name;
+                }
+
+                #inGifCreatorName {
+                    grid-area: input-name;
+                }
+
+                label[for=inGifCreatorWidth] {
+                    grid-area: label-width;
+                }
+
+                #inGifCreatorWidth {
+                    grid-area: input-width;
+                }
+
+                label[for=inGifCreatorHeight] {
+                    grid-area: label-height;
+                }
+
+                #inGifCreatorHeight {
+                    grid-area: input-height;
+                }
+
+                label[for=inGifCreatorColor] {
+                    grid-area: label-color;
+                }
+
+                #inGifCreatorColor {
+                    grid-area: input-color;
+                }
+
+                label[for=inGifCreatorFPS] {
+                    grid-area: label-fps;
+                }
+
+                #inGifCreatorFPS {
+                    grid-area: input-fps
+                }
+
+                label[for=inGifCreatorLength] {
+                    grid-area: label-length;
+                }
+
+                #inGifCreatorLength {
+                    grid-area: input-length
+                }
+
+                #btnGifCreatorRecord {
+                    grid-area: btn-record;
+                }
+
+                #progressGifCreator {
+                    grid-area: progress;
+                    width: 100%;
+                    display: none;
+                }
+            </style>
+            <canvas id="canvasGifCreator"></canvas>
+            <img id="imgGifCreator">
+            <label for="inGifCreatorName">Name:</label>
+            <input id="inGifCreatorName" type="text">
+            <label for="inGifCreatorWidth">Width:</label>
+            <input id="inGifCreatorWidth" type="number" value="720">
+            <label for="inGifCreatorHeight">Height:</label>
+            <input id="inGifCreatorHeight" type="number" value="480">
+            <label for="inGifCreatorColor">Background color:</label>
+            <input id="inGifCreatorColor" type="color">
+            <label for="inGifCreatorFPS">FPS:</label>
+            <input id="inGifCreatorFPS" type="number" value="10">
+            <label for="inGifCreatorLength">Length [s]:</label>
+            <input id="inGifCreatorLength" type="number" value="10">
+            <progress id="progressGifCreator"></progress>
+            <button id="btnGifCreatorRecord">Record</button>
+        </main>
+        <footer>
+            <button id="btnGifCreatorCancel">Cancel</button>
+            <button id="btnGifCreatorSave">Save GIF</button>
+        </footer>
+    </dialog>
+
     <script src="dialog.polyfill.js"></script>
+    <script src="gifCreatorTool.js" type="module"></script>
     <script src="index.js" type="module"></script>
 </body>
 
