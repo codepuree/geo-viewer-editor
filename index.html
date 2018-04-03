@@ -30,6 +30,9 @@
                         <li>
                             <button id="btnExportXYZ" disabled="disabled">Export .xyz</button>
                         </li>
+                        <li>
+                            <button id="btnExportDXF" disabled="disabled">Export .dxf</button>
+                        </li>
                     </ul>
                 </li>
                 <li>
@@ -111,17 +114,9 @@
         <header>GIF Creator</header>
         <main>
             <style>
-                #dialogGifCreator > main {
+                #dialogGifCreator>main {
                     display: grid;
-                    grid-template-areas:
-                        "canvas     label-name      input-name"
-                        "canvas     label-width     input-width"
-                        "canvas     label-height    input-height"
-                        "canvas     label-color     input-color"
-                        "canvas     label-fps       input-fps"
-                        "canvas     label-length    input-length"
-                        "progress   btn-record      btn-record"
-                        ;
+                    grid-template-areas: "canvas     label-name      input-name" "canvas     label-width     input-width" "canvas     label-height    input-height" "canvas     label-color     input-color" "canvas     label-fps       input-fps" "canvas     label-length    input-length" "progress   btn-record      btn-record";
                     align-items: center;
                     grid-gap: 0 10px;
                 }
@@ -217,6 +212,31 @@
         <footer>
             <button id="btnGifCreatorCancel">Cancel</button>
             <button id="btnGifCreatorSave">Save GIF</button>
+        </footer>
+    </dialog>
+
+    <dialog id="dialogDxfExport">
+        <style>
+            #dialogDxfExport > main {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                align-items: center;
+            }
+        </style>
+        <header>DXF Export</header>
+        <main>
+            <label for="inDxfExportFilename">File name:</label>
+            <input id="inDxfExportFilename" type="text">
+            <label for="inDxfExportCodeInLayer">Code in layer name:</label>
+            <input type="checkbox" id="inDxfExportCodeInLayer">
+            <label for="inDxfExportUseDefaultHeight">Use default height:</label>
+            <input type="checkbox" id="inDxfExportUseDefaultHeight">
+            <label for="inDxfExportDefaultHeight">Default height:</label>
+            <input id="inDxfExportDefaultHeight" type="number">
+        </main>
+        <footer>
+            <button id="inDxfExportCancel">Cancel</button>
+            <button id="inDxfExportExport">Export</button>
         </footer>
     </dialog>
 

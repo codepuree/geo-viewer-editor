@@ -1,6 +1,7 @@
 const /** {HTMLInputElement} */inFile = document.querySelector('#inFile');
 const inBackgroundImage = document.querySelector('#inBackgroundImage');
 const btnExportXYZ = document.querySelector('#btnExportXYZ');
+const btnExportDXF = document.querySelector('#btnExportDXF');
 const inPointCodeList = document.querySelector('#inPointCodeList');
 const layers = {};
 const /** {SVGElement} */ svgCanvas = document.querySelector('#svgCanvas');
@@ -11,7 +12,14 @@ const svgPosY = document.querySelector('#svgPosY');
 const progressMain = document.querySelector('#progressMain');
 const progressStatus = document.querySelector('#progressStatus');
 const dialogGifCreator = document.querySelector('#dialogGifCreator')
+const dialogDxfExport = document.querySelector('#dialogDxfExport')
 const btnGifCreatorTool = document.querySelector('#btnGifCreatorTool')
+const inDxfExportFilename = document.querySelector('#inDxfExportFilename')
+const inDxfExportCodeInLayer = document.querySelector('#inDxfExportCodeInLayer')
+const inDxfExportUseDefaultHeight = document.querySelector('#inDxfExportUseDefaultHeight')
+const inDxfExportDefaultHeight = document.querySelector('#inDxfExportDefaultHeight')
+const inDxfExportCancel = document.querySelector('#inDxfExportCancel')
+const inDxfExportExport = document.querySelector('#inDxfExportExport')
 let filename = '';
 /** @type {PointCode[]} */
 let pointCodeList = [];
@@ -19,6 +27,7 @@ let pointCodeList = [];
 import { calculate_transform, transform, east2x, north2y } from './calculations.js';
 import { renderPoint, getLayerNames } from './canvas.js';
 import { initGifCreator } from './gifCreatorTool.js';
+import { DXFWriter } from './dxf.js';
 
 let points = [];
 let bounds = {};
@@ -118,6 +127,7 @@ inFile.addEventListener('change', event => {
 
     if (points.length >= 0) {
         btnExportXYZ.removeAttribute('disabled');
+        btnExportDXF.removeAttribute('disabled');
     }
 });
 
@@ -149,6 +159,34 @@ btnExportXYZ.addEventListener('click', event => {
     let file = writeXYZ(points);
     download(file, filename + '.xyz', 'text/csv');
 });
+
+btnExportDXF.addEventListener('click', event => {
+    dialogDxfExport.showModal();
+    // console.log('DXF:', { points, pointCodeList });
+    // let writer = new DXFWriter();
+    // let file = writer.write({ points, pointCodeList })
+
+    // download(file, filename + '.dxf', 'application/dxf');
+})
+
+inDxfExportCancel.addEventListener('click', event => {
+    dialogDxfExport.close();
+})
+
+inDxfExportExport.addEventListener('click', event => {
+    let writer = new DXFWriter({
+        withCode: inDxfExportCodeInLayer.checked,
+        defaultZ: inDxfExportUseDefaultHeight.checked ? inDxfExportDefaultHeight.value : undefined
+    });
+
+    let name = inDxfExportFilename.value.length > 0 
+        ? inDxfExportFilename.value 
+        : filename;
+    let file = writer.write({ points, pointCodeList })
+
+    download(file, name + '.dxf', 'application/dxf');
+    dialogDxfExport.close();
+})
 
 inBackgroundImage.addEventListener('change', event => {
     if (inBackgroundImage.files.length >= 0) {
