@@ -108,29 +108,7 @@ inFile.addEventListener('change', event => {
                         + `\tmin East:  ${bounds.minX}\tmax East:  ${bounds.maxX}\n`
                         + `\twidth: ${bounds.width} height: ${bounds.height}`);
 
-                    getLayerNames(svgMain).forEach(name => {
-                        let container = layerWrapper;
-                        let text = null;
-
-                        if (pointCodeList.length > 0) {
-                            let pointCode = pointCodeList.find(x => x.code === name);
-
-                            if (pointCode && pointCode.group && pointCode.group.name) {
-                                container = getAsideGroup(layerWrapper, pointCode.group.name);
-                            } else {
-                                container = getAsideGroup(layerWrapper, 'Unknown')
-                            }
-
-                            if (pointCode && pointCode.name) {
-                                text = pointCode.name;
-                            }
-                        }
-
-                        container.style.display = 'grid';
-                        container.style.gridTemplateColumns = '1rem auto 1rem';
-                        container.style.alignItems = 'center';
-                        createLayerControl({ wrapper: container, name, text, canvas: svgMain });
-                    })
+                    fillLayerAside(layerWrapper, svgMain);
                 })
                 .catch(error => {
                     console.error(error.message, error.stack);
@@ -161,6 +139,7 @@ inPointCodeList.addEventListener('change', event => {
         if (fileHandler.then) {
             fileHandler.then(newPointCodeList => {
                 pointCodeList = pointCodeList.concat(newPointCodeList)
+                fillLayerAside(layerWrapper, svgCanvas.querySelector('#main'));
             })
         }
     }
@@ -663,6 +642,35 @@ function changeLayerVisibility(layerName) {
             }
         }
     }
+}
+
+function fillLayerAside(container, svgMain) {
+    // Clear container
+    container.innerHTML = '';
+    container.style.display = 'block';
+
+    getLayerNames(svgMain).forEach(name => {
+        let text = null;
+
+        if (pointCodeList.length > 0) {
+            let pointCode = pointCodeList.find(x => x.code === name);
+
+            if (pointCode && pointCode.group && pointCode.group.name) {
+                container = getAsideGroup(layerWrapper, pointCode.group.name);
+            } else {
+                container = getAsideGroup(layerWrapper, 'Unknown')
+            }
+
+            if (pointCode && pointCode.name) {
+                text = pointCode.name;
+            }
+        }
+
+        container.style.display = 'grid';
+        container.style.gridTemplateColumns = '1rem auto 1rem';
+        container.style.alignItems = 'center';
+        createLayerControl({ wrapper: container, name, text, canvas: svgMain });
+    })
 }
 
 function getHexColor(color) {
