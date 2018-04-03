@@ -88,7 +88,6 @@ export function capture(svgCanvas, canvas) {
                 height = canvas.height;
             }
             
-            console.log(`Image:\tw=${img.width} | h=${img.height}\nCanvas:\tw=${canvas.width} | h=${canvas.height}`);
             context.drawImage(img, Math.round((canvas.width - width) / 2), Math.round((canvas.height - height) / 2), width, height);
             
             canvas.toBlob(blob => {

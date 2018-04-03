@@ -192,13 +192,11 @@ inBackgroundImage.addEventListener('change', event => {
                     [{ id: '8', x: 4463462.49, y: 5331589.56 }, { id: '296', x: 4463681.6, y: 5331612.58 }, { id: '468', x: 4463411.25, y: 5331457.3 }],
                     [{ id: '8', x: 120, y: 538 }, { id: '296', x: 402, y: 505 }, { id: '468', x: 53, y: 706 }]
                 );
-                console.log('trans:', trans);
                 // image.setAttribute('transform', /*`scale(1, 1) translate(0, 0) */`rotate(${trans.rotation})`);
 
                 if (!svgCanvas.hasAttribute('viewBox')) {
                     svgCanvas.setAttribute('viewBox', `0 0 ${img.width} ${img.height}`)
                 } else {
-                    console.log(`image: w = ${img.width} h = ${img.height}`);
                     let viewBox = svgCanvas.viewBox.baseVal;
                     // image.setAttribute('translate', `translate(${viewBox.x},${viewBox.y})`)
                     image.setAttribute('x', trans.translation.x)
@@ -656,7 +654,6 @@ function createLayerControl({ wrapper, name, text, canvas }) {
 function changeLayerVisibility(layerName) {
     return function (event) {
         let svgLayerName = `layer_${layerName.length > 0 ? layerName : '__default__'}`;
-        console.log(`layerName: ${layerName} changed to `, this.checked);
         let layer = svgCanvas.querySelector(`#${svgLayerName}`);
         if (layer) {
             if (this.checked) {
@@ -669,7 +666,6 @@ function changeLayerVisibility(layerName) {
 }
 
 function getHexColor(color) {
-    console.log('Color:', color);
     if (color.includes('rgb')) {
         color = color.replace('rgb(', '').replace(')', '')
         return color.split(',')
