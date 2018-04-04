@@ -52,7 +52,7 @@ export class DXFWriter {
     }
 
     // Entities
-    createPoint({ x, y, z, code }, pointCodeList) {
+    createPoint({ x, y, z, code, name }, pointCodeList) {
         let layerName = code;
         let pointCode = pointCodeList.find( x => x.code == code);
 
@@ -84,5 +84,20 @@ export class DXFWriter {
             + `${y}\n`
             + '30\n'
             + `${z}\n`;
+
+        this.content += '0\n'
+            + 'TEXT\n'
+            + '1\n'
+            + `${name}\n`
+            + '8\n'
+            + `${layerName}_txt\n`
+            + '10\n'
+            + `${x + 0.25}\n`
+            + '20\n'
+            + `${y}\n`
+            + '30\n'
+            + `${z}\n`
+            + '40\n'
+            + `0.5\n`
     }
 }
